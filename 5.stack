@@ -1,0 +1,95 @@
+#include <stdio.h>
+#define MAX 10
+
+int stack[MAX];
+int top = -1;
+
+// Push a plate
+void push()
+{
+    int plate;
+
+    if(top == MAX - 1)
+    {
+        printf("\nStack is full!\n");
+        return;
+    }
+
+    printf("\nEnter Plate ID: ");
+    scanf("%d", &plate);
+
+    top++;
+    stack[top] = plate;
+
+    printf("Plate added successfully!\n");
+}
+
+// Pop the top plate
+void pop()
+{
+    if(top == -1)
+    {
+        printf("\nNo plates available!\n");
+        return;
+    }
+
+    printf("\nPlate %d removed.\n", stack[top]);
+    top--;
+}
+
+// Display all plates
+void display()
+{
+    int i;
+
+    if(top == -1)
+    {
+        printf("\nNo plates in dispenser!\n");
+        return;
+    }
+
+    printf("\nPlates in Dispenser:\n");
+
+    for(i = top; i >= 0; i--)
+    {
+        printf("%d\n", stack[i]);
+    }
+}
+
+int main()
+{
+    int choice;
+
+    while(1)
+    {
+        printf("\n===== PLATE DISPENSER =====\n");
+        printf("1. Add Plate (Push)\n");
+        printf("2. Remove Plate (Pop)\n");
+        printf("3. Display Plates\n");
+        printf("4. Exit\n");
+
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch(choice)
+        {
+            case 1:
+                push();
+                break;
+
+            case 2:
+                pop();
+                break;
+
+            case 3:
+                display();
+                break;
+
+            case 4:
+                return 0;
+
+            default:
+                printf("\nInvalid choice!\n");
+        }
+    }
+}
