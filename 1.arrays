@@ -1,0 +1,50 @@
+#include <stdio.h>
+
+int main()
+{
+    int aqi[24];
+    int i;
+    int highest;
+    int poor = 0;
+    int sum = 0;
+    float average;
+
+    // Read 24 AQI values
+    printf("Enter AQI readings for 24 hours:\n");
+
+    for(i = 0; i < 24; i++)
+    {
+        printf("AQI for hour %d: ", i + 1);
+        scanf("%d", &aqi[i]);
+    }
+
+    // Assume first value is the highest
+    highest = aqi[0];
+
+    // Find highest, count poor readings and calculate sum
+    for(i = 0; i < 24; i++)
+    {
+        if(aqi[i] > highest)
+        {
+            highest = aqi[i];
+        }
+
+        if(aqi[i] > 200)
+        {
+            poor++;
+        }
+
+        sum = sum + aqi[i];
+    }
+
+    // Calculate average
+    average = sum / 24.0;
+
+    // Display results
+    printf("\n--- AQI Report ---\n");
+    printf("Highest AQI = %d\n", highest);
+    printf("Poor AQI readings (>200) = %d\n", poor);
+    printf("Average AQI = %.2f\n", average);
+
+    return 0;
+}
