@@ -1,0 +1,146 @@
+
+#include <stdio.h>
+
+#define MAX 100
+#define INF 999999
+
+int heapSize = 0;
+
+struct Node {
+    int vertex;
+    int distance;
+};
+
+struct Node heap[MAX * MAX];
+
+void swap(struct Node *a, struct Node *b) {
+    struct Node temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+void insert(int vertex, int distance) {
+    int i = heapSize++;
+
+    heap[i].vertex = vertex;
+    heap[i].distance = distance;
+
+    while (i > 0) {
+        int parent = (i - 1) / 2;
+
+        if (heap[parent].distance <= heap[i].distance)
+            break;
+
+        swap(&heap[parent], &heap[i]);
+        i = parent;
+    }
+}
+
+struct Node extractMin() {
+    struct Node result = heap[0];
+    heap[0] = heap[--heapSize];
+
+    int i = 0;
+
+    while (1) {
+        int left = 2 * i + 1;
+        int right = 2 * i + 2;
+        int smallest = i;
+
+        if (left < heapSize &&
+            heap[left].distance < heap[smallest].distance)
+            smallest = left;
+
+        if (right < heapSize &&
+            heap[right].distance < heap[smallest].distance)
+            smallest = right;
+
+        if (smallest == i)
+            break;
+
+        swap(&heap[i], &heap[smallest]);
+        i = smallest;
+    }
+
+    return result;
+}
+
+void dijkstra(int graph[MAX][MAX], int n, int source) {
+    int dist[MAX];
+    int visited[MAX] = {0};
+
+    for (int i = 0; i < n; i++)
+        dist[i] = INF;
+
+    dist[source] = 0;
+    insert(source, 0);
+
+    while (heapSize > 0) {
+        struct Node current = extractMin();
+        int u = current.vertex;
+
+        if (visited[u])
+            continue;
+
+        visited[u] = 1;
+
+        for (int v = 0; v < n; v++) {
+            if (graph[u][v] > 0 && !visited[v]) {
+                int newDist = dist[u] + graph[u][v];
+
+                if (newDist < dist[v]) {
+                    dist[v] = newDist;
+                    insert(v, newDist);
+                }
+            }
+        }
+    }
+
+    printf("\nMinimum distances from source %d:\n", source);
+
+    for (int i = 0; i < n; i++) {
+        if (dist[i] == INF)
+            printf("Vertex %d: Unreachable\n", i);
+        else
+            printf("Vertex %d: %d\n", i, dist[i]);
+    }
+}
+
+int main() {
+    int graph[MAX][MAX];
+    int n, source;
+
+    printf("Enter number of vertices: ");
+    scanf("%d", &n);
+
+    if (n < 1 || n > MAX) {
+        printf("Invalid number of vertices.\n");
+        return 1;
+    }
+
+    printf("Enter adjacency matrix (0 means no edge):\n");
+
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            scanf("%d", &graph[i][j]);
+
+            if (graph[i][j] < 0) {
+                printf("Negative weights are not allowed.\n");
+                return 1;
+            }
+        }
+    }
+
+    printf("Enter source vertex (0 to %d): ", n - 1);
+    scanf("%d", &source);
+
+    if (source < 0 || source >= n) {
+        printf("Invalid source vertex.\n");
+        return 1;
+    }
+
+    heapSize = 0;
+    dijkstra(graph, n, source);
+
+    return 0;
+}
