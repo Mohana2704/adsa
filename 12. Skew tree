@@ -1,0 +1,115 @@
+
+#include <stdio.h>
+#include <stdlib.h>
+
+struct Node {
+    int priority;
+    struct Node *left, *right;
+};
+
+struct Node *createNode(int priority) {
+    struct Node *n = (struct Node *)malloc(sizeof(struct Node));
+
+    n->priority = priority;
+    n->left = NULL;
+    n->right = NULL;
+
+    return n;
+}
+
+struct Node *merge(struct Node *h1, struct Node *h2) {
+    if (h1 == NULL)
+        return h2;
+
+    if (h2 == NULL)
+        return h1;
+
+    if (h1->priority > h2->priority) {
+        struct Node *temp = h1;
+        h1 = h2;
+        h2 = temp;
+    }
+
+    h1->right = merge(h1->right, h2);
+
+    struct Node *temp = h1->left;
+    h1->left = h1->right;
+    h1->right = temp;
+
+    return h1;
+}
+
+struct Node *insert(struct Node *root, int priority) {
+    struct Node *newNode = createNode(priority);
+    return merge(root, newNode);
+}
+
+struct Node *deleteMin(struct Node *root) {
+    if (root == NULL) {
+        printf("No patients in the queue.\n");
+        return NULL;
+    }
+
+    struct Node *left = root->left;
+    struct Node *right = root->right;
+
+    printf("Highest-priority patient treated: %d\n",
+           root->priority);
+
+    free(root);
+
+    return merge(left, right);
+}
+
+void display(struct Node *root) {
+    if (root == NULL)
+        return;
+
+    printf("%d ", root->priority);
+    display(root->left);
+    display(root->right);
+}
+
+int main() {
+    struct Node *root = NULL;
+    int choice, priority;
+
+    while (1) {
+        printf("\n1. Insert Patient\n");
+        printf("2. Treat Highest-Priority Patient\n");
+        printf("3. Display Heap\n");
+        printf("4. Exit\n");
+        printf("Enter choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                printf("Enter patient priority: ");
+                scanf("%d", &priority);
+
+                root = insert(root, priority);
+                printf("Patient added successfully.\n");
+                break;
+
+            case 2:
+                root = deleteMin(root);
+                break;
+
+            case 3:
+                if (root == NULL)
+                    printf("Heap is empty.\n");
+                else {
+                    printf("Skew Heap (preorder): ");
+                    display(root);
+                    printf("\n");
+                }
+                break;
+
+            case 4:
+                return 0;
+
+            default:
+                printf("Invalid choice.\n");
+        }
+    }
+}
