@@ -1,0 +1,184 @@
+
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct Node {
+    int key[3];
+    int n;
+    struct Node *child[4];
+} Node;
+
+Node *root = NULL;
+
+Node *createNode(int key) {
+    Node *p = malloc(sizeof(Node));
+    p->key[0] = key;
+    p->n = 1;
+
+    for (int i = 0; i < 4; i++)
+        p->child[i] = NULL;
+
+    return p;
+}
+
+int isLeaf(Node *p) {
+    return p->child[0] == NULL;
+}
+
+/* Insert into a node that has room.
+   A split returns the promoted key and right child. */
+int insertRec(Node *p, int key, int *promoted,
+              Node **rightChild) {
+    int i = 0;
+
+    while (i < p->n && key > p->key[i])
+        i++;
+
+    if (i < p->n && key == p->key[i])
+        return 0;
+
+    if (!isLeaf(p)) {
+        int up;
+        Node *newRight = NULL;
+
+        up = insertRec(p->child[i], key,
+                       promoted, &newRight);
+
+        if (up == 0)
+            return 0;
+
+        key = *promoted;
+
+        for (int j = p->n; j > i; j--) {
+            p->key[j] = p->key[j - 1];
+            p->child[j + 1] = p->child[j];
+        }
+
+        p->key[i] = key;
+        p->child[i + 1] = newRight;
+        p->n++;
+
+    } else {
+        for (int j = p->n; j > i; j--)
+            p->key[j] = p->key[j - 1];
+
+        p->key[i] = key;
+        p->n++;
+    }
+
+    if (p->n < 3)
+        return 0;
+
+    /* Split the temporary three-key node. */
+    Node *r = createNode(p->key[2]);
+    r->child[0] = p->child[2];
+    r->child[1] = p->child[3];
+
+    *promoted = p->key[1];
+    *rightChild = r;
+
+    p->n = 1;
+    p->child[2] = NULL;
+    p->child[3] = NULL;
+
+    return 1;
+}
+
+void insert(int key) {
+    if (root == NULL) {
+        root = createNode(key);
+        return;
+    }
+
+    int promoted;
+    Node *rightChild = NULL;
+
+    int split = insertRec(root, key,
+                          &promoted, &rightChild);
+
+    if (split) {
+        Node *newRoot = createNode(promoted);
+        newRoot->child[0] = root;
+        newRoot->child[1] = rightChild;
+        root = newRoot;
+    }
+}
+
+int search(Node *p, int key) {
+    if (p == NULL)
+        return 0;
+
+    int i = 0;
+
+    while (i < p->n && key > p->key[i])
+        i++;
+
+    if (i < p->n && key == p->key[i])
+        return 1;
+
+    if (isLeaf(p))
+        return 0;
+
+    return search(p->child[i], key);
+}
+
+void display(Node *p) {
+    if (p == NULL)
+        return;
+
+    for (int i = 0; i < p->n; i++) {
+        display(p->child[i]);
+        printf("%d ", p->key[i]);
+    }
+
+    display(p->child[p->n]);
+}
+
+int main() {
+    int choice, roll;
+
+    while (1) {
+        printf("\n1. Insert Roll Number\n");
+        printf("2. Search Roll Number\n");
+        printf("3. Display Tree\n");
+        printf("4. Exit\n");
+        printf("Enter choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                printf("Enter roll number: ");
+                scanf("%d", &roll);
+
+                if (search(root, roll)) {
+                    printf("Roll number already exists.\n");
+                } else {
+                    insert(roll);
+                    printf("Roll number inserted.\n");
+                }
+                break;
+
+            case 2:
+                printf("Enter roll number to search: ");
+                scanf("%d", &roll);
+
+                if (search(root, roll))
+                    printf("Roll number found.\n");
+                else
+                    printf("Roll number not found.\n");
+                break;
+
+            case 3:
+                printf("Roll numbers in sorted order: ");
+                display(root);
+                printf("\n");
+                break;
+
+            case 4:
+                return 0;
+
+            default:
+                printf("Invalid choice.\n");
+        }
+    }
+}
