@@ -1,0 +1,167 @@
+
+#include <stdio.h>
+#include <stdlib.h>
+
+struct Node {
+    int id;
+    struct Node *left, *right;
+};
+
+struct Node *createNode(int id) {
+    struct Node *n = malloc(sizeof(struct Node));
+    n->id = id;
+    n->left = n->right = NULL;
+    return n;
+}
+
+struct Node *rightRotate(struct Node *x) {
+    struct Node *y = x->left;
+    x->left = y->right;
+    y->right = x;
+    return y;
+}
+
+struct Node *leftRotate(struct Node *x) {
+    struct Node *y = x->right;
+    x->right = y->left;
+    y->left = x;
+    return y;
+}
+
+struct Node *splay(struct Node *root, int key) {
+    if (root == NULL || root->id == key)
+        return root;
+
+    if (key < root->id) {
+        if (root->left == NULL)
+            return root;
+
+        if (key < root->left->id) {
+            root->left->left =
+                splay(root->left->left, key);
+            root = rightRotate(root);
+        } else if (key > root->left->id) {
+            root->left->right =
+                splay(root->left->right, key);
+
+            if (root->left->right != NULL)
+                root->left = leftRotate(root->left);
+        }
+
+        return root->left == NULL
+            ? root : rightRotate(root);
+    } else {
+        if (root->right == NULL)
+            return root;
+
+        if (key > root->right->id) {
+            root->right->right =
+                splay(root->right->right, key);
+            root = leftRotate(root);
+        } else if (key < root->right->id) {
+            root->right->left =
+                splay(root->right->left, key);
+
+            if (root->right->left != NULL)
+                root->right = rightRotate(root->right);
+        }
+
+        return root->right == NULL
+            ? root : leftRotate(root);
+    }
+}
+
+struct Node *insert(struct Node *root, int id) {
+    if (root == NULL)
+        return createNode(id);
+
+    root = splay(root, id);
+
+    if (root->id == id) {
+        printf("Contact already exists.\n");
+        return root;
+    }
+
+    struct Node *n = createNode(id);
+
+    if (id < root->id) {
+        n->right = root;
+        n->left = root->left;
+        root->left = NULL;
+    } else {
+        n->left = root;
+        n->right = root->right;
+        root->right = NULL;
+    }
+
+    return n;
+}
+
+struct Node *search(struct Node *root, int id) {
+    root = splay(root, id);
+
+    if (root != NULL && root->id == id)
+        printf("Contact %d found and moved to root.\n", id);
+    else
+        printf("Contact %d not found.\n", id);
+
+    return root;
+}
+
+void inorder(struct Node *root) {
+    if (root != NULL) {
+        inorder(root->left);
+        printf("%d ", root->id);
+        inorder(root->right);
+    }
+}
+
+void display(struct Node *root) {
+    printf("Inorder: ");
+    inorder(root);
+
+    if (root != NULL)
+        printf("\nRoot contact: %d\n", root->id);
+    else
+        printf("\nTree is empty.\n");
+}
+
+int main() {
+    struct Node *root = NULL;
+    int choice, id;
+
+    while (1) {
+        printf("\n1. Insert Contact\n");
+        printf("2. Search Contact\n");
+        printf("3. Display Tree\n");
+        printf("4. Exit\n");
+        printf("Enter choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                printf("Enter contact ID: ");
+                scanf("%d", &id);
+                root = insert(root, id);
+                display(root);
+                break;
+
+            case 2:
+                printf("Enter contact ID to search: ");
+                scanf("%d", &id);
+                root = search(root, id);
+                display(root);
+                break;
+
+            case 3:
+                display(root);
+                break;
+
+            case 4:
+                return 0;
+
+            default:
+                printf("Invalid choice.\n");
+        }
+    }
+}
