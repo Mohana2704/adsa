@@ -1,0 +1,146 @@
+
+#include <stdio.h>
+
+#define MAX 100
+#define INF 999999
+
+struct Node {
+    int vertex;
+    int weight;
+};
+
+struct Node heap[MAX * MAX];
+int heapSize = 0;
+
+void swap(struct Node *a, struct Node *b) {
+    struct Node temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+void insert(int vertex, int weight) {
+    int i = heapSize++;
+
+    heap[i].vertex = vertex;
+    heap[i].weight = weight;
+
+    while (i > 0) {
+        int parent = (i - 1) / 2;
+
+        if (heap[parent].weight <= heap[i].weight)
+            break;
+
+        swap(&heap[parent], &heap[i]);
+        i = parent;
+    }
+}
+
+struct Node extractMin() {
+    struct Node result = heap[0];
+    heap[0] = heap[--heapSize];
+
+    int i = 0;
+
+    while (1) {
+        int left = 2 * i + 1;
+        int right = 2 * i + 2;
+        int smallest = i;
+
+        if (left < heapSize &&
+            heap[left].weight < heap[smallest].weight)
+            smallest = left;
+
+        if (right < heapSize &&
+            heap[right].weight < heap[smallest].weight)
+            smallest = right;
+
+        if (smallest == i)
+            break;
+
+        swap(&heap[i], &heap[smallest]);
+        i = smallest;
+    }
+
+    return result;
+}
+
+void prim(int graph[MAX][MAX], int n) {
+    int key[MAX], parent[MAX], visited[MAX] = {0};
+    int total = 0, count = 0;
+
+    for (int i = 0; i < n; i++) {
+        key[i] = INF;
+        parent[i] = -1;
+    }
+
+    heapSize = 0;
+    key[0] = 0;
+    insert(0, 0);
+
+    while (heapSize > 0 && count < n) {
+        struct Node current = extractMin();
+        int u = current.vertex;
+
+        if (visited[u])
+            continue;
+
+        visited[u] = 1;
+        count++;
+
+        for (int v = 0; v < n; v++) {
+            if (graph[u][v] > 0 && !visited[v] &&
+                graph[u][v] < key[v]) {
+
+                key[v] = graph[u][v];
+                parent[v] = u;
+                insert(v, key[v]);
+            }
+        }
+    }
+
+    if (count != n) {
+        printf("Graph is disconnected. MST does not exist.\n");
+        return;
+    }
+
+    printf("\nEdges in Minimum Spanning Tree:\n");
+
+    for (int i = 1; i < n; i++) {
+        printf("%d - %d : %d\n",
+               parent[i], i, key[i]);
+        total += key[i];
+    }
+
+    printf("Total minimum cost = %d\n", total);
+}
+
+int main() {
+    int graph[MAX][MAX];
+    int n;
+
+    printf("Enter number of vertices: ");
+    scanf("%d", &n);
+
+    if (n < 1 || n > MAX) {
+        printf("Invalid number of vertices.\n");
+        return 1;
+    }
+
+    printf("Enter weighted adjacency matrix:\n");
+    printf("(Enter 0 if there is no edge)\n");
+
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            scanf("%d", &graph[i][j]);
+
+            if (graph[i][j] < 0) {
+                printf("Negative weights are not supported.\n");
+                return 1;
+            }
+        }
+    }
+
+    prim(graph, n);
+
+    return 0;
+}
