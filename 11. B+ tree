@@ -1,0 +1,137 @@
+
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX 3
+
+struct Node {
+    int keys[MAX];
+    int count;
+    struct Node *child[MAX + 1];
+    struct Node *next;
+    int leaf;
+};
+
+struct Node *root = NULL;
+
+struct Node *createNode(int leaf) {
+    struct Node *n = (struct Node *)malloc(sizeof(struct Node));
+    n->count = 0;
+    n->leaf = leaf;
+    n->next = NULL;
+
+    for (int i = 0; i <= MAX; i++)
+        n->child[i] = NULL;
+
+    return n;
+}
+
+void insert(int key) {
+    if (root == NULL) {
+        root = createNode(1);
+        root->keys[0] = key;
+        root->count = 1;
+        return;
+    }
+
+    struct Node *p = root;
+
+    while (!p->leaf) {
+        int i = 0;
+        while (i < p->count && key >= p->keys[i])
+            i++;
+        p = p->child[i];
+    }
+
+    int i = p->count - 1;
+
+    while (i >= 0 && p->keys[i] > key) {
+        p->keys[i + 1] = p->keys[i];
+        i--;
+    }
+
+    p->keys[i + 1] = key;
+    p->count++;
+
+    if (p->count > MAX) {
+        printf("Leaf overflow: splitting is required.\n");
+        p->count = MAX;
+    }
+}
+
+int search(int key) {
+    struct Node *p = root;
+
+    while (p != NULL && !p->leaf) {
+        int i = 0;
+        while (i < p->count && key >= p->keys[i])
+            i++;
+        p = p->child[i];
+    }
+
+    if (p != NULL) {
+        for (int i = 0; i < p->count; i++)
+            if (p->keys[i] == key)
+                return 1;
+    }
+
+    return 0;
+}
+
+void display() {
+    struct Node *p = root;
+
+    while (p != NULL && !p->leaf)
+        p = p->child[0];
+
+    printf("Article IDs: ");
+
+    while (p != NULL) {
+        for (int i = 0; i < p->count; i++)
+            printf("%d ", p->keys[i]);
+
+        p = p->next;
+    }
+
+    printf("\n");
+}
+
+int main() {
+    int choice, id;
+
+    while (1) {
+        printf("\n1. Insert\n2. Search\n3. Display\n4. Exit\n");
+        printf("Enter choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                printf("Enter article ID: ");
+                scanf("%d", &id);
+                insert(id);
+                break;
+
+            case 2:
+                printf("Enter article ID to search: ");
+                scanf("%d", &id);
+
+                if (search(id))
+                    printf("Article ID found.\n");
+                else
+                    printf("Article ID not found.\n");
+                break;
+
+            case 3:
+                display();
+                break;
+
+            case 4:
+                exit(0);
+
+            default:
+                printf("Invalid choice.\n");
+        }
+    }
+
+    return 0;
+}
